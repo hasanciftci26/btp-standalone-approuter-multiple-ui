@@ -1,0 +1,92 @@
+_schema-version: "3.2"
+ID: btp-standalone-approuter-multiple-ui
+version: 0.0.1
+modules:
+- name: btp-standalone-approuter-multiple-ui-approuter
+  type: approuter.nodejs
+  path: btp-standalone-approuter-multiple-ui-approuter
+  requires:
+  - name: btp-standalone-approuter-multiple-ui_html_repo_runtime
+  - name: btp-standalone-approuter-multiple-ui-destination-service
+  parameters:
+    disk-quota: 256M
+    memory: 256M
+- name: btp-standalone-approuter-multiple-ui_ui_deployer
+  type: com.sap.application.content
+  path: .
+  requires:
+  - name: btp-standalone-approuter-multiple-ui_html_repo_host
+    parameters:
+      content-target: true
+  build-parameters:
+    build-result: resources
+    requires:
+    - artifacts:
+      - ndbstraininghtml5ui1.zip
+      name: ndbstraininghtml5ui1
+      target-path: resources/
+    - artifacts:
+      - ndbstraininghtml5ui2.zip
+      name: ndbstraininghtml5ui2
+      target-path: resources/
+- name: ndbstraininghtml5ui1
+  type: html5
+  path: html5-ui1
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+- name: ndbstraininghtml5ui2
+  type: html5
+  path: html5-ui2
+  build-parameters:
+    build-result: dist
+    builder: custom
+    commands:
+    - npm install
+    - npm run build:cf
+    supported-platforms: []
+resources:
+- name: btp-standalone-approuter-multiple-ui_html_repo_runtime
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-runtime
+- name: btp-standalone-approuter-multiple-ui_html_repo_host
+  type: org.cloudfoundry.managed-service
+  parameters:
+    service: html5-apps-repo
+    service-plan: app-host
+- name: btp-standalone-approuter-multiple-ui-destination-service
+  type: org.cloudfoundry.managed-service
+  parameters:
+    config:
+      HTML5Runtime_enabled: false
+      init_data:
+        instance:
+          destinations:
+          - Authentication: NoAuthentication
+            Name: ui5
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://ui5.sap.com
+          - Authentication: NoAuthentication
+            Name: northwind1
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://services.odata.org
+          - Authentication: NoAuthentication
+            Name: northwind2
+            ProxyType: Internet
+            Type: HTTP
+            URL: https://services.odata.org          
+          existing_destinations_policy: update
+      version: 1.0.0
+    service: destination
+    service-name: btp-standalone-approuter-multiple-ui-destination-service
+    service-plan: lite
+parameters:
+  deploy_mode: html5-repo
